@@ -1,0 +1,253 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+def calc_fi(x0):
+    mu1 = 0.9990463
+    mu2 = 9.537e-4
+    #mu1 = 0.9
+    #mu2 = 0.1
+    U = calc_U(x0, mu1, mu2)
+    return -2*U - x0[0]**2 - x0[1]**2
+
+def calc_Lagrnage_Points(mu1,mu2):
+    l1y = 0
+    a1 = (mu2/(3*mu1))**(1/3)
+    l1x = mu1 - a1 + a1**2/3 + a1**3/9 + 23*a1**4/81
+    l2y = 0
+    l2x = mu1 + a1 + a1**2/3 - a1**3/9 - 31*a1**4/81
+    l3y = 0
+    rat = mu2/mu1
+    l3x = -mu2 - 1 + (7/12*rat)-7/12*(rat)**2 + 13223/20736*(rat)**3
+    l4x = 1/2 - mu2
+    l4y = np.sqrt(3)/2
+    l5x = 1/2 - mu2
+    l5y = -np.sqrt(3)/2
+    return np.array([l1x,l2x,l3x,l4x,l5x]), np.array([l1y,l2y,l3y,l4y,l5y])
+
+def calc_U(x0,mu1,mu2):
+    r1 = np.sqrt((x0[2] + mu2)**2 + x0[3]**2)
+    r2 = np.sqrt((x0[2] - mu1)**2 + x0[3]** 2)
+    U = -mu1/r1 - mu2/r2 - 1/2*(x0[2]**2 + x0[3]**2)
+    return U
+
+def apply_rotation_matrix(x,t):
+    M =np.array([[np.cos(t),-np.sin(t)],[np.sin(t),np.cos(t)]])
+    return M @ x
+
+def derotate(x,times):
+    derotated = np.array([])
+    for i in range(len(x)):
+        derotx = apply_rotation_matrix(x[i],times[i])
+        derotated = np.append(derotated,derotx)
+    derotated = np.reshape(derotated, (int(len(derotated)/2),2))
+    return derotated
+
+def restricted(x):
+    # form of x is [px,py,q1,q2]
+    mu1 = 0.9990463
+    mu2 = 9.537e-4
+    #mu1 = 0.9
+    #mu2 = 0.1
+    r1 = np.sqrt((x[2] + mu2)**2 + x[3]**2)
+    r2 = np.sqrt((x[2] - mu1)**2 + x[3]**2)
+    q1dot = x[0]
+    q2dot = x[1]
+    pxdot = 2*x[1] - mu1 * (x[2] + mu2)/r1**3 - mu2*(x[2] - mu1)/r2**3 + x[2]
+    pydot = -2*x[0] - mu1 * x[3]/r1**3 - mu2 * x[3]/r2**3 + x[3]
+    return np.array([pxdot,pydot,q1dot,q2dot])
+
+# def restrictedx(x):
+#     # [p1,p2,q1,q2]
+#     pxdot = 0
+#     pydot = 0
+#     xdot = x[0] + x[3]
+#     ydot = x[1] - x[2]
+#     return np.array([pxdot,pydot,xdot,ydot])
+#
+# def restrictedp(x):
+#     mu1 = 0.9
+#     mu2 = 0.1
+#     r1 = np.sqrt((x[2] + mu2)**2 + x[3]**2)
+#     r2 = np.sqrt((x[2] - mu1)**2 + x[3]**2)
+#     xdot = 0
+#     ydot = 0
+#     pxdot = 2 * x[1] - mu1 * (x[2] + mu2) / r1 ** 3 - mu2 * (x[2] - mu1) / r2 ** 3 + x[2]
+#     pydot = -2 * x[0] - mu1 * x[3] / r1 ** 3 - mu2 * x[3] / r2 ** 3 + x[3]
+#     return np.array([pxdot,pydot,xdot,ydot])
+
+class ButcherTab:
+    def __init__(self,A,b,c):
+        self.A = A
+        self.b = b
+        self.c = c
+
+class Gauss:
+    def __init__(self, func, t_0, x_0, h, max_t, Butcher):
+        self.func = func
+        self.t_0 = t_0
+        self.x_0 = x_0
+        self.max = max_t
+        self.h = h
+        self.B = Butcher
+
+    def integrate(self,maxit, eps=1e-14):
+        xsarr = np.array([self.x_0])
+        times = np.array(self.t_0)
+        #first_integrals = np.array(calculate_first_integrals(self.x_0))
+        xn = self.x_0
+        t_n = self.t_0
+        while t_n+self.h <= self.max:
+            xn1 = self.step(xn, maxit,eps)
+            xsarr = np.append(xsarr, xn1)
+            t_n += self.h
+            times = np.append(times, t_n)
+            xn = xn1
+            #first_integrals = np.append(first_integrals, calculate_first_integrals(xn))
+        return xsarr, times#, first_integrals
+
+    def step(self,xn,maxit,eps):
+        x1,x2,x3 = xn.copy(), xn.copy(), xn.copy()
+        for m in range(maxit):
+            z1,z2,z3 = x1.copy(), x2.copy(), x3.copy()
+            x1 = self.func(xn + self.h*(self.B.A[0][0]*z1 + self.B.A[0][1]*z2 + self.B.A[0][2]*z3))
+            x2 = self.func(xn + self.h*(self.B.A[1][0]*z1 + self.B.A[1][1]*z2 + self.B.A[1][2]*z3))
+            x3 = self.func(xn + self.h*(self.B.A[2][0]*z1 + self.B.A[2][1]*z2 + self.B.A[2][2]*z3))
+            if np.sum(abs(x1-z1)) + np.sum(abs(x2-z2)) + np.sum(abs(x3-z3)) <= eps:
+                return xn + self.h * (self.B.b[0]*x1 + self.B.b[1]*x2 + self.B.b[2]*x3)
+        raise
+
+class explicitRK:
+    def __init__(self, func, t_0, x_0, h, max_t, Butcher):
+        self.func = func
+        self.t_0 = t_0
+        self.x_0 = x_0
+        self.max = max_t
+        self.h = h
+        self.B = Butcher
+
+    def integrate(self):
+        xsarr = np.array([self.x_0])
+        times = np.array(self.t_0)
+        #first_integrals = np.array(calculate_first_integrals(self.x_0))
+        xn = self.x_0
+        t_n = self.t_0
+        while t_n+self.h <= self.max:
+            xn1 = self.step(xn)
+            xsarr = np.append(xsarr, xn1)
+            t_n += self.h
+            times = np.append(times, t_n)
+            xn = xn1
+            #first_integrals = np.append(first_integrals, calculate_first_integrals(xn))
+        return xsarr, times#, first_integrals
+
+    def step(self,xn):
+        k_array = np.zeros([len(self.B.A),len(self.B.A)])
+        for i in range(len(self.B.A)):
+            ki = self.func(self.interior_staging(i,xn,k_array))
+            k_array[i] = ki.copy()
+        stages = self.B.b*k_array
+        xn1 = xn + self.h * self.sum_of_stages(k_array)
+        return xn1
+
+    def sum_of_stages(self,stages):
+        stage_sum = np.zeros(len(stages))
+        for i in range(len(stages)):
+            stage_sum += stages[i]*self.B.b[i]
+        return stage_sum
+
+    def interior_staging(self,i,xn,ks):
+        stage_sum = np.zeros(len(ks))
+        for j in range(len(self.B.A[i])):
+            stage_sum += self.B.A[i][j]*ks[j]
+        return xn + self.h*stage_sum
+
+
+t0=0
+h = 0.01
+max_t = 300
+#velocity then coords
+#x0 = np.array([0.0,0.0,0.97,0.0])
+#x0 = np.array([0.0,0.0,0.5,0.5])
+lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
+#lx, ly = calc_Lagrnage_Points(0.9,0.1)
+#x0 = np.array([0.0,0.0,lx[4]+0.1,ly[4]])
+#x0 = np.array([-1.7,-0.6,0.85,0.0])
+#x0 = np.array([0.01,0.0,lx[3],ly[3]])
+#x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]])
+#x0 = np.array([0.0,0.5,0.6,0.0])
+#x0 = np.array([-0.5,0.3,0.9,0.0])
+#x0 = np.array([0.0,0.0,lx[3],ly[3]])
+#x0 = np.array([-0.275,0.01,0.98,0.0])
+#x0 = np.array([0.0,0.0,lx[3]-0.4,ly[3]])
+#x0 = np.array([0.0,0.9,1.0,0.0])
+#x0 = np.array([0.0,0.15,0.8,0.0])
+#x0 = np.array([-1.5,0.09,0.85,0.0])
+#x0 = np.array([-1.8,0.3,0.85,0.0])
+#x0 = np.array([-0.5,0.5,lx[0],ly[0]])
+#x0 = np.array([0.0,0.2,lx[0]+0.01,ly[0]])
+
+##Interior Region Plots
+
+x0 = np.array([0.0,0.0,lx[0]-0.1,0.0]) # 1
+
+
+
+## Restricted Orbits
+#x0 = np.array([-0.4,0.1,0.0,0.5])
+#x0 = np.array([0.0,0.0,0.85])
+
+
+GO6 = ButcherTab([[5/36,2/9 - (np.sqrt(15))/15,5/36 - (np.sqrt(15))/30],[5/36+(np.sqrt(15))/24,2/9,5/36-np.sqrt(15)/24],[5/36+np.sqrt(15)/30,2/9+np.sqrt(15)/15,5/36]],[5/18,4/9,5/18],[1/2-np.sqrt(15)/10,1/2,1/2+np.sqrt(15)])
+Gl = Gauss(restricted, t0, x0, h, max_t, GO6)
+xn,times = Gl.integrate(20)
+RK4 = ButcherTab([[0,0,0,0],[1/2,0,0,0],[0,1/2,0,0],[0,0,1,0]],[1/6,2/6,2/6,1/6],[0,1/2,1/2,1])
+runge_kutta = explicitRK(restricted,t0,x0,h,max_t,RK4)
+#xn, times = runge_kutta.integrate()
+xn = np.reshape(xn, (int(len(xn)/4),4))
+
+
+C = calc_fi(x0)
+
+f = lambda x, y : -2*(-0.9990463/np.sqrt((x+9.537e-4)**2 + y**2) - 9.537e-4/np.sqrt((x-0.9990463)**2 + y**2) - 1/2*(x**2 + y**2)) #-2U
+#f = lambda x, y : -2*(-0.9/np.sqrt((x+0.1)**2 + y**2) - 0.1/np.sqrt((x-0.9)**2 + y**2) - 1/2*(x**2 + y**2)) #-2U
+
+d = np.linspace(-2,2,2000)
+x,y = np.meshgrid(d,d)
+
+fig,ax = plt.subplots()
+
+
+im = plt.imshow( (f(x,y) < C), extent=(x.min(), x.max(), y.min(), y.max()), origin='lower', cmap='Greys')
+
+
+ax.scatter(0.9990463,0)
+ax.scatter(-9.537e-4,0)
+#ax.scatter(0.9,0)
+#ax.scatter(-0.1,0)
+ax.plot(xn[:,2],xn[:,3],label='Rotating Orbit')
+ax.scatter(lx,ly, marker='x',color='r')
+#ax.scatter(0,0,marker = '+',color='black')
+
+plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Jupiter Years")
+#plt.title("t=" + str(max_t))
+plt.xlabel('x')
+plt.ylabel('y')
+plt.xlim(-1.5,1.5)
+plt.ylim(-1.5,1.5)
+##For the L4,L5 orbits use this scaling
+#plt.ylim(0.5,1.5)
+#plt.xlim(0,1)
+for i in range(len(lx)):
+    plt.text(lx[i] + 0.08,ly[i]+0.08, 'L'+ str(i+1), color='r')
+
+
+#Inertial frame plot
+
+rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
+derotated_coords = derotate(rotation_coords,times)
+plt.plot(derotated_coords[:,0],derotated_coords[:,1],label='Non-Rotating Orbit')
+ax.legend()
+
+plt.show()
+print(lx[0],ly[0])
