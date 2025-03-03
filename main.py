@@ -162,24 +162,19 @@ class explicitRK:
             stage_sum += self.B.A[i][j]*ks[j]
         return xn + self.h*stage_sum
 
+lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
 
-t0=0
-h = 0.01
-max_t = 300
 #velocity then coords
 #x0 = np.array([0.0,0.0,0.97,0.0])
 #x0 = np.array([0.0,0.0,0.5,0.5])
-lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
 #lx, ly = calc_Lagrnage_Points(0.9,0.1)
 #x0 = np.array([0.0,0.0,lx[4]+0.1,ly[4]])
 #x0 = np.array([-1.7,-0.6,0.85,0.0])
 #x0 = np.array([0.01,0.0,lx[3],ly[3]])
 #x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]])
 #x0 = np.array([0.0,0.5,0.6,0.0])
-#x0 = np.array([-0.5,0.3,0.9,0.0])
 #x0 = np.array([0.0,0.0,lx[3],ly[3]])
 #x0 = np.array([-0.275,0.01,0.98,0.0])
-#x0 = np.array([0.0,0.0,lx[3]-0.4,ly[3]])
 #x0 = np.array([0.0,0.9,1.0,0.0])
 #x0 = np.array([0.0,0.15,0.8,0.0])
 #x0 = np.array([-1.5,0.09,0.85,0.0])
@@ -189,8 +184,45 @@ lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
 
 ##Interior Region Plots
 
-x0 = np.array([0.0,0.0,lx[0]-0.1,0.0]) # 1
+#x0 = np.array([0.0,0.0,lx[0]-0.1,0.0]) # 1
+#x0 = np.array([0.0,0.05,lx[0]-0.1,0.0]) # 2
+#x0 = np.array([0.0,0.5,0.5,0.0]) # 3
+#x0 = np.array([0.5,1.5,0.2,0.0]) # 4 needed stepsize 0.001
+#x0 = np.array([0.0,0.0,0.9,0.0]) # 5
+#x0 = np.array([0.0,0.0,0.5,0.5]) # 6
+#x0 = np.array([0.0,0.6,0.4,0.0]) # 7
+#x0 = np.array([0.0,0.0,lx[3]-0.4,ly[3]]) # 8
 
+#Transfer Regime
+
+#x0 = np.array([0.0,0.0,lx[0],0.01]) # 1
+#x0 = np.array([-0.01,0.02,lx[0],0.0]) # 2
+#x0 = np.array([0.005,0.03,lx[0],0.0]) # 3
+
+# Exit Regime
+
+#x0 = np.array([0.0,0.0,lx[1],0.0])
+#x0 = np.array([-0.12,0.01,lx[1],0.0])
+
+# Low Restriction Regime
+#x0 = np.array([0.0,0.0,lx[2]-0.01,0.0]) # 1
+#x0 = np.array([0.0,0.0,lx[2],0.01]) # 2
+#x0 = np.array([0.0,0.01,lx[2],0.0]) # 3
+#x0 = np.array([0.01,0.0,lx[2],0.02]) # 4 same behaviour
+#x0 = np.array([0.0,0.0,lx[3]+0.025,ly[3]]) # 5 Back and forth behaviour, yay!!!!
+
+# Unrestricted
+
+#x0 = np.array([-0.6,0.2,lx[0]+0.01,0.0]) # 1
+#x0 = np.array([-0.5,0.3,0.9,0.0]) # 2
+#x0 = np.array([0.0,0.2,lx[0]+0.01,ly[0]]) # 3
+#x0 = np.array([0.0,2.1,0.3,0.0]) # 4
+#x0 = np.array([0.3,0.0,lx[2]-0.1,0.0]) # 5
+#x0 = np.array([0.5,0.4,lx[2]-0.3,0.0]) # 6
+
+t0=0
+h = 0.01
+max_t = 500
 
 
 ## Restricted Orbits
@@ -233,8 +265,30 @@ plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Jupiter Years")
 #plt.title("t=" + str(max_t))
 plt.xlabel('x')
 plt.ylabel('y')
-plt.xlim(-1.5,1.5)
-plt.ylim(-1.5,1.5)
+
+#plt.xlim(-3,3)
+#plt.ylim(-3,3)
+
+plt.xlim(-10,10)
+plt.ylim(-10,10)
+
+#plt.xlim(-1.5,1.5)
+#plt.ylim(-1.5,1.5)
+
+#plt.xlim(-1.1,1.1)
+#plt.ylim(-1.1,1.1)
+
+#plt.xlim(-3,3)
+#plt.ylim(-3,3)
+
+#plt.xlim(-1,1.1)
+#plt.ylim(-1,1)
+
+#plt.xlim(0.9,1.1)
+#plt.ylim(-0.1,0.1)
+
+
+
 ##For the L4,L5 orbits use this scaling
 #plt.ylim(0.5,1.5)
 #plt.xlim(0,1)
@@ -247,7 +301,7 @@ for i in range(len(lx)):
 rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
 derotated_coords = derotate(rotation_coords,times)
 plt.plot(derotated_coords[:,0],derotated_coords[:,1],label='Non-Rotating Orbit')
-ax.legend()
+ax.legend(loc='upper right')
 
 plt.show()
 print(lx[0],ly[0])
