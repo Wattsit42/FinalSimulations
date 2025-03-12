@@ -57,25 +57,22 @@ def restricted(x):
     pydot = -2*x[0] - mu1 * x[3]/r1**3 - mu2 * x[3]/r2**3 + x[3]
     return np.array([pxdot,pydot,q1dot,q2dot])
 
-# def restrictedx(x):
-#     # [p1,p2,q1,q2]
-#     pxdot = 0
-#     pydot = 0
-#     xdot = x[0] + x[3]
-#     ydot = x[1] - x[2]
-#     return np.array([pxdot,pydot,xdot,ydot])
-#
-# def restrictedp(x):
-#     mu1 = 0.9
-#     mu2 = 0.1
-#     r1 = np.sqrt((x[2] + mu2)**2 + x[3]**2)
-#     r2 = np.sqrt((x[2] - mu1)**2 + x[3]**2)
-#     xdot = 0
-#     ydot = 0
-#     pxdot = 2 * x[1] - mu1 * (x[2] + mu2) / r1 ** 3 - mu2 * (x[2] - mu1) / r2 ** 3 + x[2]
-#     pydot = -2 * x[0] - mu1 * x[3] / r1 ** 3 - mu2 * x[3] / r2 ** 3 + x[3]
-#     return np.array([pxdot,pydot,xdot,ydot])
+def select_coords_y(x):
+    y0_section = np.array([])
+    for i in range(len(x)):
+        if np.abs(x[i,3]) < 1e-3:
+            y0_section = np.append(y0_section,x[i])
+    y0_section = np.reshape(y0_section, (int(len(y0_section) / 4), 4))
+    return y0_section
 
+def select_coords_x(x):
+    x_cut =  9.537e-4
+    x0_section = np.array([])
+    for i in range(len(x)):
+        if np.abs(x[i,2]-x_cut) < 1e-3:
+            x0_section = np.append(x0_section,x[i])
+    x0_section = np.reshape(x0_section, (int(len(x0_section) / 4), 4))
+    return x0_section
 class ButcherTab:
     def __init__(self,A,b,c):
         self.A = A
@@ -188,10 +185,11 @@ lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
 #x0 = np.array([0.0,0.05,lx[0]-0.1,0.0]) # 2
 #x0 = np.array([0.0,0.5,0.5,0.0]) # 3
 #x0 = np.array([0.5,1.5,0.2,0.0]) # 4 needed stepsize 0.001
-#x0 = np.array([0.0,0.0,0.9,0.0]) # 5
+x0 = np.array([0.0,0.0,0.9,0.0]) # 5
 #x0 = np.array([0.0,0.0,0.5,0.5]) # 6
 #x0 = np.array([0.0,0.6,0.4,0.0]) # 7
 #x0 = np.array([0.0,0.0,lx[3]-0.4,ly[3]]) # 8
+#x0 = np.array([0.0,0.0,0.9,0.01])
 
 #Transfer Regime
 
@@ -221,8 +219,11 @@ lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
 #x0 = np.array([0.5,0.4,lx[2]-0.3,0.0]) # 6
 
 t0=0
-h = 0.01
+h = 0.001
 max_t = 500
+
+# velocity cases
+#x0 = np.array([-0.5,0.0,0.5,0.3])
 
 
 ## Restricted Orbits
@@ -232,10 +233,10 @@ max_t = 500
 
 GO6 = ButcherTab([[5/36,2/9 - (np.sqrt(15))/15,5/36 - (np.sqrt(15))/30],[5/36+(np.sqrt(15))/24,2/9,5/36-np.sqrt(15)/24],[5/36+np.sqrt(15)/30,2/9+np.sqrt(15)/15,5/36]],[5/18,4/9,5/18],[1/2-np.sqrt(15)/10,1/2,1/2+np.sqrt(15)])
 Gl = Gauss(restricted, t0, x0, h, max_t, GO6)
-xn,times = Gl.integrate(20)
+#xn,times = Gl.integrate(20)
 RK4 = ButcherTab([[0,0,0,0],[1/2,0,0,0],[0,1/2,0,0],[0,0,1,0]],[1/6,2/6,2/6,1/6],[0,1/2,1/2,1])
 runge_kutta = explicitRK(restricted,t0,x0,h,max_t,RK4)
-#xn, times = runge_kutta.integrate()
+xn, times = runge_kutta.integrate()
 xn = np.reshape(xn, (int(len(xn)/4),4))
 
 
@@ -250,27 +251,27 @@ x,y = np.meshgrid(d,d)
 fig,ax = plt.subplots()
 
 
-im = plt.imshow( (f(x,y) < C), extent=(x.min(), x.max(), y.min(), y.max()), origin='lower', cmap='Greys')
+#im = plt.imshow( (f(x,y) < C), extent=(x.min(), x.max(), y.min(), y.max()), origin='lower', cmap='Greys')
 
 
-ax.scatter(0.9990463,0)
-ax.scatter(-9.537e-4,0)
+#ax.scatter(0.9990463,0)
+#ax.scatter(-9.537e-4,0)
 #ax.scatter(0.9,0)
 #ax.scatter(-0.1,0)
-ax.plot(xn[:,2],xn[:,3],label='Rotating Orbit')
-ax.scatter(lx,ly, marker='x',color='r')
+#ax.plot(xn[:,2],xn[:,3],label='Rotating Orbit')
+#ax.scatter(lx,ly, marker='x',color='r')
 #ax.scatter(0,0,marker = '+',color='black')
 
-plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Jupiter Years")
+#plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Jupiter Years")
 #plt.title("t=" + str(max_t))
-plt.xlabel('x')
-plt.ylabel('y')
+#plt.xlabel('x')
+#plt.ylabel('y')
 
 #plt.xlim(-3,3)
 #plt.ylim(-3,3)
 
-plt.xlim(-10,10)
-plt.ylim(-10,10)
+#plt.xlim(-10,10)
+#plt.ylim(-10,10)
 
 #plt.xlim(-1.5,1.5)
 #plt.ylim(-1.5,1.5)
@@ -292,16 +293,31 @@ plt.ylim(-10,10)
 ##For the L4,L5 orbits use this scaling
 #plt.ylim(0.5,1.5)
 #plt.xlim(0,1)
-for i in range(len(lx)):
-    plt.text(lx[i] + 0.08,ly[i]+0.08, 'L'+ str(i+1), color='r')
+#for i in range(len(lx)):
+#    plt.text(lx[i] + 0.08,ly[i]+0.08, 'L'+ str(i+1), color='r')
 
 
 #Inertial frame plot
 
-rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
-derotated_coords = derotate(rotation_coords,times)
-plt.plot(derotated_coords[:,0],derotated_coords[:,1],label='Non-Rotating Orbit')
-ax.legend(loc='upper right')
+#rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
+#derotated_coords = derotate(rotation_coords,times)
+#plt.plot(derotated_coords[:,0],derotated_coords[:,1],label='Non-Rotating Orbit')
+#ax.legend(loc='upper right')
+
+
+## Poincare Section
+
+## want the y = 0 cut
+p_section = select_coords_y(xn)
+plt.plot(p_section[:,0],p_section[:,2],'.')
+plt.xlabel('px')
+plt.ylabel('x')
+
+#p_section = select_coords_x(xn)
+#plt.plot(p_section[:,1],p_section[:,3],'.')
+#plt.xlabel('py')
+#plt.ylabel('y')
+
 
 plt.show()
 print(lx[0],ly[0])
