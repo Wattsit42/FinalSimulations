@@ -7,6 +7,8 @@ def calc_fi(x0):
     mu2 = 9.537e-4
     #mu1 = 0.9
     #mu2 = 0.1
+    #mu1 = 0.98785
+    #mu2 = 1.215e-2
     U = calc_U(x0, mu1, mu2)
     return -2*U - x0[0]**2 - x0[1]**2
 
@@ -49,6 +51,8 @@ def restricted(x):
     mu2 = 9.537e-4
     #mu1 = 0.9
     #mu2 = 0.1
+    #mu1 = 0.98785
+    #mu2 = 1.215e-2
     r1 = np.sqrt((x[2] + mu2)**2 + x[3]**2)
     r2 = np.sqrt((x[2] - mu1)**2 + x[3]**2)
     q1dot = x[0]
@@ -57,22 +61,36 @@ def restricted(x):
     pydot = -2*x[0] - mu1 * x[3]/r1**3 - mu2 * x[3]/r2**3 + x[3]
     return np.array([pxdot,pydot,q1dot,q2dot])
 
-def select_coords_y(x):
-    y0_section = np.array([])
-    for i in range(len(x)):
-        if np.abs(x[i,3]) < 1e-3:
-            y0_section = np.append(y0_section,x[i])
-    y0_section = np.reshape(y0_section, (int(len(y0_section) / 4), 4))
-    return y0_section
+def select_coords_y(x,xy,target_value):
+    # We want to find the points where the y value switches from sign
+    # If xy = 3 then we get y cut if xy = 2 then we get the x cut
+    indexes = np.array([])
+    for i in range(len(x)-1):
+        if (x[i,xy]-target_value)*(x[i+1,xy]-target_value) < 0:
+            indexes = np.append(indexes,[i,i+1])
+    indexes = np.reshape(indexes, (int(len(indexes)/2),2))
+    return indexes
 
-def select_coords_x(x):
-    x_cut =  9.537e-4
-    x0_section = np.array([])
-    for i in range(len(x)):
-        if np.abs(x[i,2]-x_cut) < 1e-3:
-            x0_section = np.append(x0_section,x[i])
-    x0_section = np.reshape(x0_section, (int(len(x0_section) / 4), 4))
-    return x0_section
+def linear_interpolation(x,indexes,xy, target_value):
+    # xy = 0 then x=0 cut xy = 1 then y=0 cut
+    cut_values = np.array([])
+    t = 0
+    for i in range(len(indexes)):
+        if xy == 0:
+            x1 = x[int(indexes[i,0]),2]
+            x2 = x[int(indexes[i,1]),2]
+            t = (target_value-x1)/(x2-x1)
+        elif xy == 1:
+            y1 = x[int(indexes[i,0]),3]
+            y2 = x[int(indexes[i,1]),3]
+            t = (target_value-y1)/(y2-y1)
+        cut_values = np.append(cut_values, evaluate(x[int(indexes[i,0])],x[int(indexes[i,1])],t))
+    cut_values = np.reshape(cut_values, (int(len(cut_values)/4),4))
+    return cut_values
+
+def evaluate(x1,x2,t):
+    return (x2-x1)*t + x1
+
 class ButcherTab:
     def __init__(self,A,b,c):
         self.A = A
@@ -160,6 +178,8 @@ class explicitRK:
         return xn + self.h*stage_sum
 
 lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
+#lx,ly = calc_Lagrnage_Points(0.98785,1.215e-2)
+
 
 #velocity then coords
 #x0 = np.array([0.0,0.0,0.97,0.0])
@@ -185,7 +205,7 @@ lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
 #x0 = np.array([0.0,0.05,lx[0]-0.1,0.0]) # 2
 #x0 = np.array([0.0,0.5,0.5,0.0]) # 3
 #x0 = np.array([0.5,1.5,0.2,0.0]) # 4 needed stepsize 0.001
-x0 = np.array([0.0,0.0,0.9,0.0]) # 5
+#x0 = np.array([0.0,0.0,0.9,0.0]) # 5
 #x0 = np.array([0.0,0.0,0.5,0.5]) # 6
 #x0 = np.array([0.0,0.6,0.4,0.0]) # 7
 #x0 = np.array([0.0,0.0,lx[3]-0.4,ly[3]]) # 8
@@ -204,7 +224,7 @@ x0 = np.array([0.0,0.0,0.9,0.0]) # 5
 
 # Low Restriction Regime
 #x0 = np.array([0.0,0.0,lx[2]-0.01,0.0]) # 1
-#x0 = np.array([0.0,0.0,lx[2],0.01]) # 2
+x0 = np.array([0.0,0.0,lx[2],0.01]) # 2
 #x0 = np.array([0.0,0.01,lx[2],0.0]) # 3
 #x0 = np.array([0.01,0.0,lx[2],0.02]) # 4 same behaviour
 #x0 = np.array([0.0,0.0,lx[3]+0.025,ly[3]]) # 5 Back and forth behaviour, yay!!!!
@@ -218,9 +238,15 @@ x0 = np.array([0.0,0.0,0.9,0.0]) # 5
 #x0 = np.array([0.3,0.0,lx[2]-0.1,0.0]) # 5
 #x0 = np.array([0.5,0.4,lx[2]-0.3,0.0]) # 6
 
+# Lagrange Points
+
+#x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]])
+#x0 = np.array([0.0,0.0,lx[4]+0.01,ly[4]])
+
+
 t0=0
-h = 0.001
-max_t = 500
+h = 0.1
+max_t = 5000
 
 # velocity cases
 #x0 = np.array([-0.5,0.0,0.5,0.3])
@@ -233,17 +259,19 @@ max_t = 500
 
 GO6 = ButcherTab([[5/36,2/9 - (np.sqrt(15))/15,5/36 - (np.sqrt(15))/30],[5/36+(np.sqrt(15))/24,2/9,5/36-np.sqrt(15)/24],[5/36+np.sqrt(15)/30,2/9+np.sqrt(15)/15,5/36]],[5/18,4/9,5/18],[1/2-np.sqrt(15)/10,1/2,1/2+np.sqrt(15)])
 Gl = Gauss(restricted, t0, x0, h, max_t, GO6)
-#xn,times = Gl.integrate(20)
+xn,times = Gl.integrate(20)
 RK4 = ButcherTab([[0,0,0,0],[1/2,0,0,0],[0,1/2,0,0],[0,0,1,0]],[1/6,2/6,2/6,1/6],[0,1/2,1/2,1])
 runge_kutta = explicitRK(restricted,t0,x0,h,max_t,RK4)
-xn, times = runge_kutta.integrate()
+#xn, times = runge_kutta.integrate()
 xn = np.reshape(xn, (int(len(xn)/4),4))
 
 
 C = calc_fi(x0)
 
+
 f = lambda x, y : -2*(-0.9990463/np.sqrt((x+9.537e-4)**2 + y**2) - 9.537e-4/np.sqrt((x-0.9990463)**2 + y**2) - 1/2*(x**2 + y**2)) #-2U
 #f = lambda x, y : -2*(-0.9/np.sqrt((x+0.1)**2 + y**2) - 0.1/np.sqrt((x-0.9)**2 + y**2) - 1/2*(x**2 + y**2)) #-2U
+#f = lambda x, y : -2*(-0.98785/np.sqrt((x+1.215e-2)**2 + y**2) - 1.215e-2/np.sqrt((x-0.98785)**2 + y**2) - 1/2*(x**2 + y**2)) #-2U
 
 d = np.linspace(-2,2,2000)
 x,y = np.meshgrid(d,d)
@@ -253,31 +281,31 @@ fig,ax = plt.subplots()
 
 #im = plt.imshow( (f(x,y) < C), extent=(x.min(), x.max(), y.min(), y.max()), origin='lower', cmap='Greys')
 
-
 #ax.scatter(0.9990463,0)
 #ax.scatter(-9.537e-4,0)
+#ax.scatter(0.98785,0)
+#ax.scatter(1.215e-2,0)
 #ax.scatter(0.9,0)
 #ax.scatter(-0.1,0)
 #ax.plot(xn[:,2],xn[:,3],label='Rotating Orbit')
 #ax.scatter(lx,ly, marker='x',color='r')
 #ax.scatter(0,0,marker = '+',color='black')
-
 #plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Jupiter Years")
 #plt.title("t=" + str(max_t))
-#plt.xlabel('x')
-#plt.ylabel('y')
-
-#plt.xlim(-3,3)
-#plt.ylim(-3,3)
+# plt.xlabel('x')
+# plt.ylabel('y')
+#
+# plt.xlim(-3,3)
+# plt.ylim(-3,3)
 
 #plt.xlim(-10,10)
 #plt.ylim(-10,10)
+#
+# plt.xlim(-1.5,1.5)
+# plt.ylim(-1.5,1.5)
 
-#plt.xlim(-1.5,1.5)
-#plt.ylim(-1.5,1.5)
-
-#plt.xlim(-1.1,1.1)
-#plt.ylim(-1.1,1.1)
+# plt.xlim(-1.1,1.1)
+# plt.ylim(-1.1,1.1)
 
 #plt.xlim(-3,3)
 #plt.ylim(-3,3)
@@ -285,39 +313,47 @@ fig,ax = plt.subplots()
 #plt.xlim(-1,1.1)
 #plt.ylim(-1,1)
 
-#plt.xlim(0.9,1.1)
-#plt.ylim(-0.1,0.1)
+# plt.xlim(0.0,1)
+# plt.ylim(-1.5,-0.5)
+
+# plt.xlim(0,0.1)
+# plt.ylim(0.5,1.5)
+
+# plt.xlim(0.8,1.2)
+# plt.ylim(-0.2,0.2)
 
 
 
 ##For the L4,L5 orbits use this scaling
 #plt.ylim(0.5,1.5)
 #plt.xlim(0,1)
-#for i in range(len(lx)):
+# for i in range(len(lx)):
 #    plt.text(lx[i] + 0.08,ly[i]+0.08, 'L'+ str(i+1), color='r')
 
 
 #Inertial frame plot
 
-#rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
-#derotated_coords = derotate(rotation_coords,times)
-#plt.plot(derotated_coords[:,0],derotated_coords[:,1],label='Non-Rotating Orbit')
-#ax.legend(loc='upper right')
+# rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
+# derotated_coords = derotate(rotation_coords,times)
+# plt.plot(derotated_coords[:,0],derotated_coords[:,1],label='Non-Rotating Orbit')
+# ax.legend(loc='upper right')
 
 
 ## Poincare Section
 
-## want the y = 0 cut
-p_section = select_coords_y(xn)
-plt.plot(p_section[:,0],p_section[:,2],'.')
-plt.xlabel('px')
-plt.ylabel('x')
+## want the y cut
+# indexes = select_coords_y(xn,3,0)
+# y0section = linear_interpolation(xn,indexes,1,0)
+# plt.plot(y0section[:,0],y0section[:,2],'.')
+# plt.xlabel('px')
+# plt.ylabel('x')
 
-#p_section = select_coords_x(xn)
-#plt.plot(p_section[:,1],p_section[:,3],'.')
-#plt.xlabel('py')
-#plt.ylabel('y')
-
+# x cut
+indexes = select_coords_y(xn,2,0)
+y0section = linear_interpolation(xn,indexes,0,0)
+plt.plot(y0section[:,1],y0section[:,3],'.')
+plt.xlabel('py')
+plt.ylabel('y')
 
 plt.show()
 print(lx[0],ly[0])
