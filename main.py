@@ -3,13 +3,19 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pandas as pd
 
+# To change from the Sun-Jupiter system to the Earth Moon you need to comment some stuff out and uncomment some stuff
+# 1) In calc_fi switch what is commented out so you have the selection you want
+# 2) In restrictedH switch what is commented so you have the selection you want
+# 3) To get the correct Lagrange points go to lines 192, 193 and select the one you want
+# 4) To get the forbidden regions to plot correctly go to lines 289, 290 and select the one you want
+# 5) To select the simulation go to line 194 and select one of the cases listed after
+# 6)
+
 def calc_fi(x0):
-    mu1 = 0.9990463
+    mu1 = 0.9990463 # Sun Jupiter
     mu2 = 9.537e-4
-    #mu1 = 0.9
-    #mu2 = 0.1
-    #mu1 = 0.98785
-    #mu2 = 1.215e-2
+    # mu1 = 0.98785 # Earth Moon
+    # mu2 = 1.215e-2
     U = calc_U(x0, mu1, mu2)
     #return -2*U - x0[0]**2 - x0[1]**2
     return -2*U - (x0[0]+x0[3])**2 - (x0[1]-x0[2])**2
@@ -47,25 +53,11 @@ def derotate(x,times):
     derotated = np.reshape(derotated, (int(len(derotated)/2),2))
     return derotated
 
-# def restricted(x):
-#     # form of x is [px,py,q1,q2]
-#     mu1 = 0.9990463
-#     mu2 = 9.537e-4
-#     #mu1 = 0.9
-#     #mu2 = 0.1
-#     #mu1 = 0.98785
-#     #mu2 = 1.215e-2
-#     r1 = np.sqrt((x[2] + mu2)**2 + x[3]**2)
-#     r2 = np.sqrt((x[2] - mu1)**2 + x[3]**2)
-#     q1dot = x[0]
-#     q2dot = x[1]
-#     pxdot = 2*x[1] - mu1 * (x[2] + mu2)/r1**3 - mu2*(x[2] - mu1)/r2**3 + x[2]
-#     pydot = -2*x[0] - mu1 * x[3]/r1**3 - mu2 * x[3]/r2**3 + x[3]
-#     return np.array([pxdot,pydot,q1dot,q2dot])
-
 def restrictedH(x):
-    mu1 = 0.9990463
+    mu1 = 0.9990463 # Jupiter sun
     mu2 = 9.537e-4
+    # mu1 = 0.98785  # Earth Moon
+    # mu2 = 1.215e-2
     r1 = np.sqrt((x[2] + mu2)**2 + x[3]**2)
     r2 = np.sqrt((x[2] - mu1)**2 + x[3]**2)
     q1dot = x[0] + x[3]
@@ -197,99 +189,36 @@ class explicitRK:
             stage_sum += self.B.A[i][j]*ks[j]
         return xn + self.h*stage_sum
 
-lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4)
+lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4) ##Sun Jupiter
+#lx, ly = calc_Lagrnage_Points(0.98785,1.215e-2) # Earth Moon
 
+#Included Simulations
+#x0 = np.array([0.0,1.1,0.6,0.0]) ## First Simulation
+x0 = np.array([0.0,0.9,0.9,0.0]) ## Second Simulation
+#x0 = np.array([−0.01, Lx[2], Lx[2], 0.01]) ## Third Simulation
 
-#velocity then coords
-#x0 = np.array([0.0,0.0,0.97,0.0])
-#x0 = np.array([0.0,0.0,0.5,0.5])
-#lx, ly = calc_Lagrnage_Points(0.9,0.1)
-#x0 = np.array([0.0,0.0,lx[4]+0.1,ly[4]])
-#x0 = np.array([-1.7,-0.6,0.85,0.0])
-#x0 = np.array([0.01,0.0,lx[3],ly[3]])
-#x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]])
-#x0 = np.array([0.0,0.5,0.6,0.0])
-#x0 = np.array([0.0,0.0,lx[3],ly[3]])
-#x0 = np.array([-0.275,0.01,0.98,0.0])
-#x0 = np.array([0.0,0.9,1.0,0.0])
-#x0 = np.array([0.0,0.15,0.8,0.0])
-#x0 = np.array([-1.5,0.09,0.85,0.0])
-#x0 = np.array([-1.8,0.3,0.85,0.0])
-#x0 = np.array([-0.5,0.5,lx[0],ly[0]])
-#x0 = np.array([0.0,0.2,lx[0]+0.01,ly[0]])
-
-##Interior Region Plots
-
-#x0 = np.array([0.0,0.0,lx[0]-0.1,0.0]) # 1
-#x0 = np.array([0.0,0.05,lx[0]-0.1,0.0]) # 2
-#x0 = np.array([0.0,0.5,0.5,0.0]) # 3
-#x0 = np.array([0.5,1.5,0.2,0.0]) # 4 needed stepsize 0.001
-#x0 = np.array([0.0,0.0,0.9,0.0]) # 5
-#x0 = np.array([0.0,0.0,0.5,0.5]) # 6
-#x0 = np.array([0.0,0.6,0.4,0.0]) # 7
-#x0 = np.array([0.0,0.0,lx[3]-0.4,ly[3]]) # 8
-#x0 = np.array([0.0,0.0,0.9,0.01])
-
-#Transfer Regime
-
-#x0 = np.array([0.0,0.0,lx[0],0.01]) # 1
-#x0 = np.array([-0.01,0.02,lx[0],0.0]) # 2
-#x0 = np.array([0.005,0.03,lx[0],0.0]) # 3
-
-# Exit Regime
-
-#x0 = np.array([0.0,0.0,lx[1],0.0])
-#x0 = np.array([-0.12,0.01,lx[1],0.0])
-
-# Low Restriction Regime
-#x0 = np.array([0.0,0.0,lx[2]-0.01,0.0]) # 1
-#x0 = np.array([0.0,0.0,lx[2],0.01]) # 2
-#x0 = np.array([0.0,0.01,lx[2],0.0]) # 3
-#x0 = np.array([0.01,0.0,lx[2],0.02]) # 4 same behaviour
-#x0 = np.array([0.0,0.0,lx[3]+0.025,ly[3]]) # 5 Back and forth behaviour, yay!!!!
-
-# Unrestricted
-
-#x0 = np.array([-0.6,0.2,lx[0]+0.01,0.0]) # 1
-#x0 = np.array([-0.5,0.3,0.9,0.0]) # 2
-#x0 = np.array([0.0,0.2,lx[0]+0.01,ly[0]]) # 3
-#x0 = np.array([0.0,2.1,0.3,0.0]) # 4
-#x0 = np.array([0.3,0.0,lx[2]-0.1,0.0]) # 5
-#x0 = np.array([0.5,0.4,lx[2]-0.3,0.0]) # 6
-
-# Lagrange Points
-
-#x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]])
-#x0 = np.array([0.0,0.0,lx[4]+0.01,ly[4]])
-
-
-# Reformulated in Hamiltonian Coords so the Symplectic method actually works
-#x0 = np.array([-ly[3],lx[3],lx[3],ly[3]])
-#x0 = np.array([-0.01,lx[2],lx[2],0.01]) #Low restriction case 2 adjusted
 #x0 = np.array([-ly[0],0.21+lx[0],lx[0]+0.01,ly[0]]) # Orbit around Jupiter
-#x0 = np.array([0.0,1.1,0.6,0.0])
-x0 = np.array([-ly[4],lx[4]+0.01,lx[4]+0.01,ly[4]])
-
+#x0 = np.array([-ly[4],lx[4]+0.01,lx[4]+0.01,ly[4]]) # L5
 
 t0=0
-h = 0.1
-max_t = 50000
+h = 0.01
+max_t = 5000
 
 GO6 = ButcherTab([[5/36,2/9 - (np.sqrt(15))/15,5/36 - (np.sqrt(15))/30],[5/36+(np.sqrt(15))/24,2/9,5/36-np.sqrt(15)/24],[5/36+np.sqrt(15)/30,2/9+np.sqrt(15)/15,5/36]],[5/18,4/9,5/18],[1/2-np.sqrt(15)/10,1/2,1/2+np.sqrt(15)])
 Gl = Gauss(restrictedH, t0, x0, h, max_t, GO6)
 xn,times, fi = Gl.integrate(20)
 RK4 = ButcherTab([[0,0,0,0],[1/2,0,0,0],[0,1/2,0,0],[0,0,1,0]],[1/6,2/6,2/6,1/6],[0,1/2,1/2,1])
 runge_kutta = explicitRK(restrictedH,t0,x0,h,max_t,RK4)
-xn1, times1, fi1 = runge_kutta.integrate()
+#xn, times, fi = runge_kutta.integrate()
 xn = np.reshape(xn, (int(len(xn)/4),4))
 
+print(fi[0])
 
 C = calc_fi(x0)
 
 
-f = lambda x, y : -2*(-0.9990463/np.sqrt((x+9.537e-4)**2 + y**2) - 9.537e-4/np.sqrt((x-0.9990463)**2 + y**2) - 1/2*(x**2 + y**2)) #-2U
-#f = lambda x, y : -2*(-0.9/np.sqrt((x+0.1)**2 + y**2) - 0.1/np.sqrt((x-0.9)**2 + y**2) - 1/2*(x**2 + y**2)) #-2U
-#f = lambda x, y : -2*(-0.98785/np.sqrt((x+1.215e-2)**2 + y**2) - 1.215e-2/np.sqrt((x-0.98785)**2 + y**2) - 1/2*(x**2 + y**2)) #-2U
+f = lambda x, y : -2*(-0.9990463/np.sqrt((x+9.537e-4)**2 + y**2) - 9.537e-4/np.sqrt((x-0.9990463)**2 + y**2) - 1/2*(x**2 + y**2)) # Sun Jupiter
+#f = lambda x, y : -2*(-0.98785/np.sqrt((x+1.215e-2)**2 + y**2) - 1.215e-2/np.sqrt((x-0.98785)**2 + y**2) - 1/2*(x**2 + y**2)) # Earth Moon
 
 d = np.linspace(-2,2,2000)
 x,y = np.meshgrid(d,d)
@@ -299,100 +228,60 @@ fig,ax = plt.subplots()
 
 im = plt.imshow( (f(x,y) < C), extent=(x.min(), x.max(), y.min(), y.max()), origin='lower', cmap='Greys')
 
-ax.scatter(0.9990463,0)
+ax.scatter(0.9990463,0) # Sun Jupiter
 ax.scatter(-9.537e-4,0)
-#ax.scatter(0.98785,0)
-#ax.scatter(1.215e-2,0)
-#ax.scatter(0.9,0)
-#ax.scatter(-0.1,0)
+# ax.scatter(0.98785,0) # Earth Moon
+# ax.scatter(1.215e-2,0)
 ax.plot(xn[:,2],xn[:,3],label='Rotating Orbit')
 ax.scatter(lx,ly, marker='x',color='r')
-#ax.scatter(0,0,marker = '+',color='black')
-plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Jupiter Years")
-#plt.title("t=" + str(max_t))
+plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Lunar Years")
 plt.xlabel('x')
 plt.ylabel('y')
-#
-# plt.xlim(-3,3)
-# plt.ylim(-3,3)
 
-#plt.xlim(-10,10)
-#plt.ylim(-10,10)
-#
-# plt.xlim(-1.5,1.5)
-# plt.ylim(-1.5,1.5)
+plt.xlim(-1.5,1.5)
+plt.ylim(-1.5,1.5)
 
-# plt.xlim(-1.1,1.1)
-# plt.ylim(-1.1,1.1)
-
-#plt.xlim(-3,3)
-#plt.ylim(-3,3)
-
-# plt.xlim(-1,1.1)
-# plt.ylim(-1,1)
-
-# plt.xlim(0.0,1)
-# plt.ylim(-1.5,-0.5)
-
-# plt.xlim(0.2,0.7)
-# plt.ylim(-0.25,0.25)
-
-# plt.xlim(0.8,1.2)
-# plt.ylim(-0.2,0.2)
-
-# plt.ylim(-0.1,0.1)
-# plt.xlim(0.9,1.1)
-
-plt.xlim(0,0.8)
-plt.ylim(-1.1,-0.5)
-
-
-##For the L4,L5 orbits use this scaling
-#plt.ylim(0.5,1.5)
-#plt.xlim(0,1)
 for i in range(len(lx)):
     plt.text(lx[i] + 0.08,ly[i]+0.08, 'L'+ str(i+1), color='r')
 
 #Inertial frame plot
-
-rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
-derotated_coords = derotate(rotation_coords,times)
+# rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
+# derotated_coords = derotate(rotation_coords,times)
 #plt.plot(derotated_coords[:,0],derotated_coords[:,1],label='Non-Rotating Orbit')
 ax.legend(loc='upper right')
 
 plt.show()
-ax.clear()
 ## Poincare Section
 
-## want the y = a cut
-indexes = select_coords_y(xn,3,-0.9)
-y0section = linear_interpolation(xn,indexes,1,-0.9)
-plt.plot(y0section[:,0],y0section[:,2],'.')
-plt.xlabel('px')
-plt.ylabel('x')
-plt.show()
-# x = a cut
-indexes = select_coords_y(xn,2,0.5)
-y0section = linear_interpolation(xn,indexes,0,0.5)
-plt.plot(y0section[:,1],y0section[:,3],'.')
-plt.xlabel('py')
-plt.ylabel('y')
-plt.show()
+ax.clear()
 
+## want the y = a cut
+# indexes = select_coords_y(xn,3,-0.9)
+# y0section = linear_interpolation(xn,indexes,1,-0.9)
+# plt.plot(y0section[:,0],y0section[:,2],'.')
+# plt.xlabel('px')
+# plt.ylabel('x')
+# plt.show()
+# # x = a cut
+# indexes = select_coords_y(xn,2,0.5)
+# y0section = linear_interpolation(xn,indexes,0,0.5)
+# plt.plot(y0section[:,1],y0section[:,3],'.')
+# plt.xlabel('py')
+# plt.ylabel('y')
+# plt.show()
+#
 plt.plot(times, abs_error(fi), label='Gauss Error')
-plt.plot(times, abs_error(fi1), label='RK4 Error')
+# plt.plot(times, abs_error(fi1), label='RK4 Error')
 plt.xlabel('t')
 plt.ylabel('absolute error')
-plt.legend(loc='upper right')
+# plt.legend(loc='upper right')
 plt.show()
-
-print(-ly[3] + ly[3])
+#
+# print(-ly[3] + ly[3])
 
 xframe = pd.DataFrame(xn)
 tframe = pd.DataFrame(times)
 fiframe = pd.DataFrame(fi)
-fi1frame = pd.DataFrame(fi1)
-xframe.to_csv('L5stability_experiment_x.csv')
-tframe.to_csv('L5stability_experiment_t.csv')
-fiframe.to_csv('L5stability_experiment_Gauss_fi.csv')
-fi1frame.to_csv('L5stability_experiment_rk4_fi.csv')
+xframe.to_csv('Second_Simulation_x.csv')
+tframe.to_csv('Second_Simulation_t.csv')
+fiframe.to_csv('Second_Simulation_fi.csv')

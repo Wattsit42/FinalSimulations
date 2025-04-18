@@ -1,0 +1,64 @@
+These are from my initial testing and I include them for posterity.
+However, to make them work you would need to rewrite them as they not written
+in the Hamiltonian coordinate system that I ended up using, they are given as coordinates of
+(\dot{x},\dot{y},x,y) and the Hamiltonian system uses (p_x,p_y,x,y) where \dot{x} = p_x + y and \doy{y} = p_y - x
+
+x0 = np.array([0.0,0.0,0.97,0.0])
+x0 = np.array([0.0,0.0,0.5,0.5])
+x0 = np.array([0.0,0.0,lx[4]+0.1,ly[4]])
+x0 = np.array([-1.7,-0.6,0.85,0.0])
+x0 = np.array([0.01,0.0,lx[3],ly[3]])
+x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]])
+x0 = np.array([0.0,0.5,0.6,0.0])
+x0 = np.array([0.0,0.0,lx[3],ly[3]])
+x0 = np.array([-0.275,0.01,0.98,0.0])
+x0 = np.array([0.0,0.9,1.0,0.0])
+x0 = np.array([0.0,0.15,0.8,0.0])
+x0 = np.array([-1.5,0.09,0.85,0.0])
+x0 = np.array([-1.8,0.3,0.85,0.0])
+x0 = np.array([-0.5,0.5,lx[0],ly[0]])
+x0 = np.array([0.0,0.2,lx[0]+0.01,ly[0]])
+
+##Interior Region Plots
+
+x0 = np.array([0.0,0.0,lx[0]-0.1,0.0]) # 1
+x0 = np.array([0.0,0.05,lx[0]-0.1,0.0]) # 2
+x0 = np.array([0.0,0.5,0.5,0.0]) # 3
+x0 = np.array([0.5,1.5,0.2,0.0]) # 4 needed stepsize 0.001
+x0 = np.array([0.0,0.0,0.9,0.0]) # 5
+x0 = np.array([0.0,0.0,0.5,0.5]) # 6
+x0 = np.array([0.0,0.6,0.4,0.0]) # 7
+x0 = np.array([0.0,0.0,lx[3]-0.4,ly[3]]) # 8
+x0 = np.array([0.0,0.0,0.9,0.01])
+
+#Transfer Regime
+
+x0 = np.array([0.0,0.0,lx[0],0.01]) # 1
+x0 = np.array([-0.01,0.02,lx[0],0.0]) # 2
+x0 = np.array([0.005,0.03,lx[0],0.0]) # 3
+
+# Exit Regime
+
+x0 = np.array([0.0,0.0,lx[1],0.0])
+x0 = np.array([-0.12,0.01,lx[1],0.0])
+
+# Low Restriction Regime
+x0 = np.array([0.0,0.0,lx[2]-0.01,0.0]) # 1
+x0 = np.array([0.0,0.0,lx[2],0.01]) # 2
+x0 = np.array([0.0,0.01,lx[2],0.0]) # 3
+x0 = np.array([0.01,0.0,lx[2],0.02]) # 4 same behaviour
+x0 = np.array([0.0,0.0,lx[3]+0.025,ly[3]]) # 5 Back and forth behaviour, yay!!!!
+
+# Unrestricted
+
+x0 = np.array([-0.6,0.2,lx[0]+0.01,0.0]) # 1
+x0 = np.array([-0.5,0.3,0.9,0.0]) # 2
+x0 = np.array([0.0,0.2,lx[0]+0.01,ly[0]]) # 3
+x0 = np.array([0.0,2.1,0.3,0.0]) # 4
+x0 = np.array([0.3,0.0,lx[2]-0.1,0.0]) # 5
+x0 = np.array([0.5,0.4,lx[2]-0.3,0.0]) # 6
+
+# Lagrange Points
+
+x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]])
+x0 = np.array([0.0,0.0,lx[4]+0.01,ly[4]])
