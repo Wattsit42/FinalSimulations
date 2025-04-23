@@ -2,14 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pandas as pd
-
-# To change from the Sun-Jupiter system to the Earth Moon you need to comment some stuff out and uncomment some stuff
-# 1) In calc_fi switch what is commented out so you have the selection you want
-# 2) In restrictedH switch what is commented so you have the selection you want
-# 3) To get the correct Lagrange points go to lines 192, 193 and select the one you want
-# 4) To get the forbidden regions to plot correctly go to lines 289, 290 and select the one you want
-# 5) To select the simulation go to line 194 and select one of the cases listed after
-# 6)
+# To change from the Sun-Jupiter system to the Earth Moon you need to comment some stuff out and uncomment some stuff.
+# 1) In calc_fi switch what is commented out so you have the selection you want.
+# 2) In restrictedH switch what is commented so you have the selection you want.
+# 3) To get the correct Lagrange points go to lines 210, 211 and select the one you want.
+# 4) To get the forbidden regions to plot correctly go to lines 248,251 and select the one you want.
+# 5) To select the simulation go to line 213 and select one of the cases listed after.
+# 6) To get the correct location of m1 and m2 go to lines 243-246 and select what you want.
+# 7) To change scaling go to lines 264-268.
+# 8) For a plot of the inertial frame uncomment lines 261-265.
+# 9) For the poincare sections uncomment lines 275-288 and enter the values of x and y you want the cut at.
+# 10) For error plotting uncomment lines 290-296.
+# 11) Do not uncomment data saving without changing the name of the save file, otherwise it will overwrite.
+# 12) Gauss 4th order is included but is not used beyond looking at error in the report and as an exercise in class inheritance
 
 def calc_fi(x0):
     mu1 = 0.9990463 # Sun Jupiter
@@ -144,6 +149,18 @@ class Gauss:
                 return xn + self.h * (self.B.b[0]*x1 + self.B.b[1]*x2 + self.B.b[2]*x3)
         raise
 
+class Gauss4(Gauss):
+
+    def step(self, xn, maxit, eps):
+        x1, x2 = xn.copy(), xn.copy()
+        for m in range(maxit):
+            z1, z2 = x1.copy(), x2.copy()
+            x1 = self.func(xn + self.h * (self.B.A[0][0] * z1 + self.B.A[0][1] * z2 ))
+            x2 = self.func(xn + self.h * (self.B.A[1][0] * z1 + self.B.A[1][1] * z2 ))
+            if np.sum(abs(x1 - z1)) + np.sum(abs(x2 - z2))  <= eps:
+                return xn + self.h * (self.B.b[0] * x1 + self.B.b[1] * x2 )
+        raise
+
 class explicitRK:
     def __init__(self, func, t_0, x_0, h, max_t, Butcher):
         self.func = func
@@ -166,7 +183,7 @@ class explicitRK:
             times = np.append(times, t_n)
             xn = xn1
             first_integrals = np.append(first_integrals, calc_fi(xn))
-        return xsarr, times, first_integrals
+        return  xsarr, times, first_integrals
 
     def step(self,xn):
         k_array = np.zeros([len(self.B.A),len(self.B.A)])
@@ -193,39 +210,38 @@ lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4) ##Sun Jupiter
 #lx, ly = calc_Lagrnage_Points(0.98785,1.215e-2) # Earth Moon
 
 #Included Simulations
-#x0 = np.array([0.0,1.1,0.6,0.0]) ## First Simulation
-x0 = np.array([0.0,0.9,0.9,0.0]) ## Second Simulation
-#x0 = np.array([−0.01, Lx[2], Lx[2], 0.01]) ## Third Simulation
-
-#x0 = np.array([-ly[0],0.21+lx[0],lx[0]+0.01,ly[0]]) # Orbit around Jupiter
-#x0 = np.array([-ly[4],lx[4]+0.01,lx[4]+0.01,ly[4]]) # L5
+#x0 = np.array([0.0,1.1,0.6,0.0]) ## First Simulation Interior region
+#x0 = np.array([0.0,0.9,0.9,0.0]) ## Second Simulation Periodic
+#x0 = np.array([-1.51337587, -1.2256231, -0.18189379, 0.313927]) ## Third Simulation Return orbit, short term simulation
+#x0 = np.array([-0.01, lx[2], lx[2], 0.01]) ## Fourth Simulation horseshoe
+#x0 = np.array([-ly[0], lx[0] + 0.21, lx[0] + 0.01, ly[0]]) ## Fifth Jupiter orbit
+#x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]]) # L4 stable orbit
+#x0 = np.array([0.0,0.0,lx[4]+0.01,ly[4]]) # L5 stable orbit
+#x0 = np.array([-ly[4],lx[4]+0.0221,lx[4]+0.0221,ly[4]]) # Nice periodic like behaviour around L5
+x0 = np.array([-ly[4],lx[4]+0.02294,lx[4]+0.02294,ly[4]]) # Drift into horseshoe orbit from L5 orbit
 
 t0=0
 h = 0.01
 max_t = 5000
 
 GO6 = ButcherTab([[5/36,2/9 - (np.sqrt(15))/15,5/36 - (np.sqrt(15))/30],[5/36+(np.sqrt(15))/24,2/9,5/36-np.sqrt(15)/24],[5/36+np.sqrt(15)/30,2/9+np.sqrt(15)/15,5/36]],[5/18,4/9,5/18],[1/2-np.sqrt(15)/10,1/2,1/2+np.sqrt(15)])
-Gl = Gauss(restrictedH, t0, x0, h, max_t, GO6)
-xn,times, fi = Gl.integrate(20)
+GO4 = ButcherTab([[1/4,1/4-np.sqrt(3)/6],[1/4+np.sqrt(3)/6,1/4]],[1/2,1/2],[1/2-np.sqrt(3)/6,1/2+np.sqrt(3)/6])
 RK4 = ButcherTab([[0,0,0,0],[1/2,0,0,0],[0,1/2,0,0],[0,0,1,0]],[1/6,2/6,2/6,1/6],[0,1/2,1/2,1])
+Gl6 = Gauss(restrictedH, t0, x0, h, max_t, GO6)
+xn, times, fi = Gl6.integrate(20)
+GL4 = Gauss4(restrictedH, t0, x0, h, max_t, GO4)
+#xn,times, fi = GL4.integrate(20)
 runge_kutta = explicitRK(restrictedH,t0,x0,h,max_t,RK4)
-#xn, times, fi = runge_kutta.integrate()
+#xn1, times1, fi1 = runge_kutta.integrate()
+
 xn = np.reshape(xn, (int(len(xn)/4),4))
 
-print(fi[0])
-
 C = calc_fi(x0)
-
-
 f = lambda x, y : -2*(-0.9990463/np.sqrt((x+9.537e-4)**2 + y**2) - 9.537e-4/np.sqrt((x-0.9990463)**2 + y**2) - 1/2*(x**2 + y**2)) # Sun Jupiter
 #f = lambda x, y : -2*(-0.98785/np.sqrt((x+1.215e-2)**2 + y**2) - 1.215e-2/np.sqrt((x-0.98785)**2 + y**2) - 1/2*(x**2 + y**2)) # Earth Moon
-
 d = np.linspace(-2,2,2000)
 x,y = np.meshgrid(d,d)
-
 fig,ax = plt.subplots()
-
-
 im = plt.imshow( (f(x,y) < C), extent=(x.min(), x.max(), y.min(), y.max()), origin='lower', cmap='Greys')
 
 ax.scatter(0.9990463,0) # Sun Jupiter
@@ -234,7 +250,7 @@ ax.scatter(-9.537e-4,0)
 # ax.scatter(1.215e-2,0)
 ax.plot(xn[:,2],xn[:,3],label='Rotating Orbit')
 ax.scatter(lx,ly, marker='x',color='r')
-plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Lunar Years")
+plt.title("t=" + str(max_t/(2*np.pi))[:5] + " Jupiter Years")
 plt.xlabel('x')
 plt.ylabel('y')
 
@@ -248,7 +264,7 @@ for i in range(len(lx)):
 # rotation_coords = np.column_stack((xn[:,2],xn[:,3]))
 # derotated_coords = derotate(rotation_coords,times)
 #plt.plot(derotated_coords[:,0],derotated_coords[:,1],label='Non-Rotating Orbit')
-ax.legend(loc='upper right')
+#ax.legend(loc='upper right')
 
 plt.show()
 ## Poincare Section
@@ -256,32 +272,36 @@ plt.show()
 ax.clear()
 
 ## want the y = a cut
-# indexes = select_coords_y(xn,3,-0.9)
-# y0section = linear_interpolation(xn,indexes,1,-0.9)
+# indexes = select_coords_y(xn,3,-0.9) # 3rd variable is where we take the y=a cut
+# y0section = linear_interpolation(xn,indexes,1,-0.9) # Interpolates between points either side to find where we cross the surface
 # plt.plot(y0section[:,0],y0section[:,2],'.')
 # plt.xlabel('px')
 # plt.ylabel('x')
 # plt.show()
 # # x = a cut
-# indexes = select_coords_y(xn,2,0.5)
-# y0section = linear_interpolation(xn,indexes,0,0.5)
+# indexes = select_coords_y(xn,2,0.5) # 3rd variable is where we take the x=a cut
+# y0section = linear_interpolation(xn,indexes,0,0.5) # Interpolates between either side to find where we cross the surface
 # plt.plot(y0section[:,1],y0section[:,3],'.')
 # plt.xlabel('py')
 # plt.ylabel('y')
 # plt.show()
 #
-plt.plot(times, abs_error(fi), label='Gauss Error')
+## Error plotting
+# plt.plot(times, abs_error(fi), label='Gauss Error')
 # plt.plot(times, abs_error(fi1), label='RK4 Error')
-plt.xlabel('t')
-plt.ylabel('absolute error')
+# plt.xlabel('t')
+# plt.ylabel('Absolute error')
 # plt.legend(loc='upper right')
-plt.show()
+# plt.show()
 #
 # print(-ly[3] + ly[3])
 
-xframe = pd.DataFrame(xn)
-tframe = pd.DataFrame(times)
-fiframe = pd.DataFrame(fi)
-xframe.to_csv('Second_Simulation_x.csv')
-tframe.to_csv('Second_Simulation_t.csv')
-fiframe.to_csv('Second_Simulation_fi.csv')
+#Data saving
+# xframe = pd.DataFrame(xn)
+# tframe = pd.DataFrame(times)
+# fiframe = pd.DataFrame(fi)
+# fi1frame = pd.DataFrame(fi1)
+# # xframe.to_csv('Fifth_Simulation_x.csv')
+# # tframe.to_csv('Fifth_Simulation_t.csv')
+# fiframe.to_csv('GO4_fi.csv')
+# fi1frame.to_csv('RK4_fi1.csv')
