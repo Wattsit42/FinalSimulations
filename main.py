@@ -210,7 +210,7 @@ lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4) ##Sun Jupiter
 #lx, ly = calc_Lagrnage_Points(0.98785,1.215e-2) # Earth Moon
 
 #Included Simulations
-#x0 = np.array([0.0,1.1,0.6,0.0]) ## First Simulation Interior region
+x0 = np.array([0.0,1.1,0.6,0.0]) ## First Simulation Interior region
 #x0 = np.array([0.0,0.9,0.9,0.0]) ## Second Simulation Periodic
 #x0 = np.array([-1.51337587, -1.2256231, -0.18189379, 0.313927]) ## Third Simulation Return orbit, short term simulation
 #x0 = np.array([-0.01, lx[2], lx[2], 0.01]) ## Fourth Simulation horseshoe
@@ -218,7 +218,7 @@ lx,ly = calc_Lagrnage_Points(0.9990463,9.537e-4) ##Sun Jupiter
 #x0 = np.array([0.0,0.0,lx[3]+0.01,ly[3]]) # L4 stable orbit
 #x0 = np.array([0.0,0.0,lx[4]+0.01,ly[4]]) # L5 stable orbit
 #x0 = np.array([-ly[4],lx[4]+0.0221,lx[4]+0.0221,ly[4]]) # Nice periodic like behaviour around L5
-x0 = np.array([-ly[4],lx[4]+0.02294,lx[4]+0.02294,ly[4]]) # Drift into horseshoe orbit from L5 orbit
+#x0 = np.array([-ly[4],lx[4]+0.02294,lx[4]+0.02294,ly[4]]) # Drift into horseshoe orbit from L5 orbit
 
 t0=0
 h = 0.01
@@ -297,11 +297,11 @@ ax.clear()
 # print(-ly[3] + ly[3])
 
 #Data saving
-# xframe = pd.DataFrame(xn)
-# tframe = pd.DataFrame(times)
-# fiframe = pd.DataFrame(fi)
+xframe = pd.DataFrame(xn)
+tframe = pd.DataFrame(times)
+fiframe = pd.DataFrame(fi)
 # fi1frame = pd.DataFrame(fi1)
-# # xframe.to_csv('Fifth_Simulation_x.csv')
-# # tframe.to_csv('Fifth_Simulation_t.csv')
-# fiframe.to_csv('GO4_fi.csv')
+xframe.to_csv('First_Simulation_x.csv')
+tframe.to_csv('First_Simulation_t.csv')
+fiframe.to_csv('First_Simulation_fi.csv')
 # fi1frame.to_csv('RK4_fi1.csv')
